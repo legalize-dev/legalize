@@ -5,7 +5,7 @@
     "role": "owner",
     "name": "Enrique López",
     "email": "enrique@legalize.dev",
-    "description": "Solo developer and maintainer of Legalize, an open-data project that turns official legislation into version-controlled, machine-readable open data.",
+    "description": "Solo developer and maintainer of Legalize, an open-data project that turns official legislation from 31 countries into version-controlled, machine-readable open data. Previously built boletinclaro.es, which makes Spain's official gazette (BOE) more readable.",
     "webpageUrl": {
       "url": "https://legalize.dev"
     }
@@ -14,7 +14,7 @@
     {
       "guid": "legalize",
       "name": "Legalize",
-      "description": "Legalize converts official legislation into version-controlled Markdown stored in public git repositories: each law is a file, each legislative reform is a commit dated to its original publication. The result is a complete, diffable, machine-readable legislative record covering 31 countries, 659,758 laws and 749,315 reforms, freely available to clone, search, fork and build on. A fully automated open-source pipeline fetches new legislation daily from official government sources and commits it to the corresponding country repository.",
+      "description": "Legalize converts official legislation into version-controlled Markdown stored in public git repositories: each law is a file, each legislative reform is a commit dated to its original publication. The result is a complete, diffable, machine-readable legislative record covering 31 countries, 659,758 laws and 749,315 reforms, freely available to clone, search, fork and build on. A fully automated open-source pipeline fetches new legislation daily from official government sources. The launch reached #1 on Hacker News (827 points, 233 comments) and was featured in Xataka; the Spanish repository alone has 1,800+ GitHub stars. Open legislative data unlocks downstream innovation: legal AI, civic tech, comparative-law research and transparency tooling.",
       "webpageUrl": {
         "url": "https://legalize.dev"
       },
@@ -27,7 +27,7 @@
     {
       "guid": "legalize-pipeline",
       "name": "legalize-pipeline",
-      "description": "The open-source engine behind Legalize: a country-agnostic pipeline (fetch, transform, commit) that turns official legal sources into clean Markdown with full reform history as git commits. It treats legislation as source code: unified format, git history as legislative history, consistent across diverse legal systems.",
+      "description": "The open-source engine behind Legalize: a country-agnostic pipeline (fetch, transform, commit) that turns official legal sources into clean Markdown with full reform history as git commits. It treats legislation as source code: unified format, git history as legislative history, consistent across diverse legal systems (Spain's BOE, France's LEGI and 29 more). Adding a new country takes about a day, and external contributors have already added country modules (e.g. Ukraine, South Korea). This is the core open infrastructure that keeps every country repository current.",
       "webpageUrl": {
         "url": "https://legalize.dev"
       },
@@ -77,10 +77,10 @@
       {
         "guid": "eu-coverage-goal",
         "status": "active",
-        "name": "Complete EU-27 coverage and harden the pipeline",
-        "description": "One-time grant to finish coverage of all 27 EU member states and harden the open-source pipeline that generates and maintains the repositories, the core open infrastructure everything downstream depends on.",
-        "amount": 50000,
-        "currency": "EUR",
+        "name": "Complete EU-27 coverage",
+        "description": "One-time grant to finish open legislative coverage of all 27 EU member states: build and run the pipeline modules for the remaining members so every EU country's consolidated legislation is published as version-controlled open data with full reform history, the public-good infrastructure that downstream users (legal AI, civic tech, comparative-law research) depend on.",
+        "amount": 25000,
+        "currency": "USD",
         "frequency": "one-time",
         "channels": ["direct"]
       }
