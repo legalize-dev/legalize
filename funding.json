@@ -1,0 +1,89 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Enrique López",
+    "email": "enrique@legalize.dev",
+    "description": "Solo developer and maintainer of Legalize, an open-data project that turns official legislation into version-controlled, machine-readable open data.",
+    "webpageUrl": {
+      "url": "https://legalize.dev"
+    }
+  },
+  "projects": [
+    {
+      "guid": "legalize",
+      "name": "Legalize",
+      "description": "Legalize converts official legislation into version-controlled Markdown stored in public git repositories: each law is a file, each legislative reform is a commit dated to its original publication. The result is a complete, diffable, machine-readable legislative record covering 31 countries, 659,758 laws and 749,315 reforms, freely available to clone, search, fork and build on. A fully automated open-source pipeline fetches new legislation daily from official government sources and commits it to the corresponding country repository.",
+      "webpageUrl": {
+        "url": "https://legalize.dev"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/legalize-dev/legalize"
+      },
+      "licenses": ["spdx:MIT"],
+      "tags": ["open-data", "legislation", "legal", "civic-tech", "govtech", "transparency", "open-government", "python"]
+    },
+    {
+      "guid": "legalize-pipeline",
+      "name": "legalize-pipeline",
+      "description": "The open-source engine behind Legalize: a country-agnostic pipeline (fetch, transform, commit) that turns official legal sources into clean Markdown with full reform history as git commits. It treats legislation as source code: unified format, git history as legislative history, consistent across diverse legal systems.",
+      "webpageUrl": {
+        "url": "https://legalize.dev"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/legalize-dev/legalize-pipeline"
+      },
+      "licenses": ["spdx:MIT"],
+      "tags": ["open-source", "data-pipeline", "open-data", "legislation", "python"]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "bmc",
+        "type": "payment-provider",
+        "address": "https://buymeacoffee.com/legalizedev",
+        "description": "Buy Me a Coffee. One-time and recurring community support."
+      },
+      {
+        "guid": "direct",
+        "type": "other",
+        "address": "enrique@legalize.dev",
+        "description": "Grants, institutional sponsorship and invoiced funding. Contact by email."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "supporter-monthly",
+        "status": "active",
+        "name": "Monthly supporter",
+        "description": "Recurring community support that helps keep the data free and the pipeline running.",
+        "amount": 5,
+        "currency": "EUR",
+        "frequency": "monthly",
+        "channels": ["bmc"]
+      },
+      {
+        "guid": "infrastructure",
+        "status": "active",
+        "name": "Keep the lights on",
+        "description": "Covers hosting, database and the daily update pipeline that keeps every country repository current.",
+        "amount": 250,
+        "currency": "EUR",
+        "frequency": "monthly",
+        "channels": ["bmc", "direct"]
+      },
+      {
+        "guid": "eu-coverage-goal",
+        "status": "active",
+        "name": "Complete EU-27 coverage and harden the pipeline",
+        "description": "One-time grant to finish coverage of all 27 EU member states and harden the open-source pipeline that generates and maintains the repositories, the core open infrastructure everything downstream depends on.",
+        "amount": 50000,
+        "currency": "EUR",
+        "frequency": "one-time",
+        "channels": ["direct"]
+      }
+    ]
+  }
+}
