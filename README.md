@@ -46,7 +46,7 @@ Legalize turns official legislation into version-controlled, machine-readable da
 | 🇺🇦 Ukraine | [legalize-ua](https://github.com/legalize-dev/legalize-ua) | — | [Rada](https://zakon.rada.gov.ua/) | 🚧 Pipeline ready |
 | 🇧🇷 Brazil | — | — | [LeXML](https://www.lexml.gov.br/) | 🔜 Help wanted |
 
-**Want to add your country?** See the [step-by-step guide](https://github.com/legalize-dev/legalize-pipeline/blob/main/ADDING_A_COUNTRY.md).
+**Want to add your country?** See the [step-by-step guide](https://github.com/legalize-dev/legalize-pipeline/tree/main/adding-a-country).
 
 ## How it works
 
@@ -120,7 +120,7 @@ Legalize is open legal infrastructure:
 
 ## Contributing
 
-The main contribution is adding a new country. Read the [format spec](SPEC.md) for the minimal contract, then follow the [step-by-step guide](https://github.com/legalize-dev/legalize-pipeline/blob/main/ADDING_A_COUNTRY.md).
+The main contribution is adding a new country. Read the [format spec](SPEC.md) for the minimal contract, then follow the [step-by-step guide](https://github.com/legalize-dev/legalize-pipeline/tree/main/adding-a-country).
 
 You can use the shared [legalize-pipeline](https://github.com/legalize-dev/legalize-pipeline) or build your own pipeline — as long as the output follows the spec. South Korea was built with an independent pipeline and it works great.
 
