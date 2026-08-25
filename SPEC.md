@@ -378,6 +378,27 @@ Norm-Id: LAW-ID
 
 Types: `[bootstrap]`, `[reform]`, `[new]`, `[repeal]`, `[correction]`, `[fix-pipeline]`
 
+### History
+
+**A repo's git history is the corpus's version history.** Each law's file carries one
+commit per version its source publishes, and a repo whose history is a single import does
+not conform. Such a repo has the text of every law and no record of when it said what,
+which is the one thing it offers over a folder of files.
+
+This is not a shortcut that can be taken back later. Two corpora here were published
+without history and both had to be rebuilt from nothing rather than amended: one of 86,000
+laws, and one that reached production with 109,944 laws and a single reform between them.
+A rebuild changes every commit hash, and it changes identifiers whenever the rule that
+generates them is corrected in the same pass — so every URL a consumer has published
+breaks at once. Building the history before the first push costs an order of magnitude
+less than adding it after.
+
+**Order is per file, not per repo.** `git log -- {path}` MUST return that law's versions
+oldest first. The repository-level sequence carries no meaning at all: a publisher writes
+laws in whatever order is convenient — parallelised, batched, alphabetical — so two laws'
+commits interleave freely. A consumer MUST NOT read repo-wide commit order as
+chronological. `Source-Date` dates a change; position does not.
+
 ### Dates
 
 **`Source-Date` is the legal date. A commit's git author date mirrors it and is not
@@ -467,7 +488,10 @@ holding. Until then the `early-stage` notice in each country repo is the honest 
   ignore them. Corrects four claims v0.3 made that the corpora do not bear out:
   `last_amendment` is required only where an amendment exists, both git identities are the
   pipeline's, the two date fields are conditional on the source stating them, and `amends`
-  is optional but must be complete rather than capped.
+  is optional but must be complete rather than capped. Adds §History: a repo's git
+  history is its version history and a single import does not conform, and repo-wide
+  commit order carries no meaning — both learned the expensive way and until now written
+  down only in the pipeline's onboarding playbook.
 - **v0.3** — Added `text_state`, `last_amendment` and `amends`, so a file states whether its
   body is the law in force, the latest available text, or the act as enacted. Absent
   `text_state` means `point_in_time`, so no existing file changes meaning. See
