@@ -173,16 +173,9 @@ the surviving file held the wrong act under the right name.
 A file's path is a template, and the repo states it in `.legalize.yml`. A consumer fills
 the template in and gets the path — no listing, no guessing, no rule hardcoded per repo:
 
-```python
-path = entry["path"].format(
-    directory=directory,
-    identifier=identifier,
-    id_sha1_2=hashlib.sha1(identifier.encode("utf-8")).hexdigest()[:2],
-)
-```
+A placeholder is one of two things:
 
-The vocabulary is **closed**. These are the only placeholders, and a template using any
-other one is not conforming:
+**Derived values**, which this spec defines and every repo may use:
 
 | Placeholder    | What it is                                                             |
 | :------------- | :--------------------------------------------------------------------- |
@@ -190,16 +183,37 @@ other one is not conforming:
 | `{identifier}` | The law's `identifier`, verbatim.                                       |
 | `{id_sha1_2}`  | The first two hexadecimal characters, lowercase, of the SHA-1 of the identifier's UTF-8 bytes. 256 buckets. |
 
-- **A consumer meeting an unknown placeholder MUST fail, not guess.** Reach for a
+**Frontmatter fields**, which are any other name: the placeholder is a key of the law's
+own YAML frontmatter and its value is used verbatim. `{jurisdiction}`, `{rank}` and
+`{series}` are paths a repo may declare without this spec having to anticipate them.
+
+```python
+values = {
+    "directory": directory,
+    "identifier": identifier,
+    "id_sha1_2": hashlib.sha1(identifier.encode("utf-8")).hexdigest()[:2],
+}
+path = entry["path"].format(**{**law_frontmatter, **values})
+```
+
+A field costs nothing to specify because the value is written in the file the path names:
+a consumer holding a law's metadata rebuilds the path with no country-specific code, which
+is what `{directory}` — the `jurisdiction` field under another name — already did.
+
+- **A consumer meeting a placeholder it cannot resolve MUST fail, not guess.** Reach for a
   substitution that raises on a key it was not given — Python's `str.format` does — rather
   than one that leaves the unknown part in place or drops it. A wrong path returns a 404
   for a law that exists, which is the failure this rule exists to make loud.
-- **Every placeholder MUST be computable from the identifier alone**, which is the reason
-  the vocabulary is closed rather than open. A URL carries an identifier and nothing else,
-  so a placeholder needing a date, a rank or a lookup cannot be resolved by the consumer
-  that needs it most. Adding one is a minor version of this spec, not a country's decision.
-- **One level of subdirectory, no deeper.** `{id_sha1_2}` gives 256 buckets, which holds
-  a corpus of any size this project has met.
+- **A resolved value MUST be a single path segment.** A publisher MUST reject a value that
+  is empty, that contains `/`, `\` or a NUL byte, or that consists only of dots. These come
+  from official sources through a country's parser, which is exactly why they are checked
+  rather than trusted.
+- **A field used in a path SHOULD be one the source cannot revise.** A path built from a
+  correctable value moves the file when the value is corrected, and that rename enters the
+  history as a change no legislature made. Deriving from the identifier, which is stable
+  within a major version, avoids it.
+- **Depth is the repo's choice.** Every level makes the tree git rewrites smaller, so there
+  is no ceiling to defend.
 
 The two shapes in use today:
 
@@ -267,23 +281,33 @@ published data: no public URL contains it, and a consumer reads it from the mani
 changing a directory's template rewrites every path under it, so a country adopts it on a
 full rebuild, not in place. That a repo may declare a different template per group of
 directories is what lets it rebuild the directory that needs it and leave the rest alone.
-#### Why the bucket comes from a hash and not from the year or the type
+#### Choosing a shard key
 
-A shard key has to exist for every file, never change, and be computable by a consumer
-that holds only an identifier — that is all a URL carries. Only the hash meets all three,
-which is why `{id_sha1_2}` is in the vocabulary and a year or a rank is not.
+A shard key has to exist for every file and never change. `{id_sha1_2}` is the one key
+that meets both for any corpus, with no knowledge of the country, which is why it is the
+default answer and why it is a derived value rather than a field.
 
-| Key | Always present? | Immutable? | From the identifier alone? | Even? |
-| :--- | :--- | :--- | :--- | :--- |
-| `sha1(identifier)[:2]` | yes | yes — it inherits the identifier's own guarantee | yes | yes: on a real 21,517-law corpus the busiest bucket is 1.28× the mean |
-| Year of `publication_date` | no — sources leave dates out | no — a corrected date moves the file | no | no — publication is heavily skewed to recent decades |
-| `rank` / type of law | yes | no — free-form and routinely corrected between rebuilds | no | no — one or two values hold most of a corpus |
-| A prefix of the identifier | yes | yes | yes | no — identifiers of a country share their prefix by construction |
+| Key | Always present? | Immutable? | Even? |
+| :--- | :--- | :--- | :--- |
+| `sha1(identifier)[:2]` | yes | yes — it inherits the identifier's own guarantee | yes: on a real 21,517-law corpus the busiest bucket is 1.28× the mean |
+| A year carried by the identifier | only where the country's identifiers carry one | yes — identifiers are stable within a major version | uneven, but bounded: on a real 171,737-law corpus the busiest year is 3.1× the mean |
+| Year of `publication_date` | no — sources leave dates out | **no** — a corrected date moves the file | as above |
+| `rank` / type of law | yes | **no** — free-form and routinely corrected between rebuilds | **no** — one or two values hold most of a corpus. Measured on the same corpus: the busiest type is 29.8× the mean and holds 49 % of the files |
+| A prefix of the identifier | yes | yes | **no** — identifiers of a country share their prefix by construction |
 
-Year and type are navigation, not storage: a reader looking for the laws of 2018 wants a
-page that lists them, which the identifier's own metadata already supports. Spending the
-directory layout on it would buy a browsable tree and give up the property that makes the
-layout usable at all.
+The two columns that decide it are the first two. A key that is sometimes absent needs a
+fallback bucket, and a key that can be corrected turns a metadata fix into a file rename —
+a change to the history that no legislature made.
+
+Evenness matters less than it looks. The cost git pays is the size of the tree it rewrites,
+so what a shard key has to do is bound that size, not equalise it: a 3.1× spread over 74
+buckets is a different thing from a 29.8× spread over 61, where one bucket holds half the
+corpus and the sharding has bought almost nothing.
+
+A key that reads as navigation — a year, a type — is a legitimate choice where it is
+immutable, and a browsable tree is worth something. It is not a substitute for the listing
+a reader actually wants, which the metadata already supports and which no directory layout
+can do as well.
 
 ### Text state
 
@@ -468,8 +492,10 @@ This spec follows semantic versioning, and a repo states the version it conforms
   directory's path template, a country's identifier rule, a removed or renamed frontmatter field. Every
   consumer's URLs break, so a major version is announced in the hub repo before it lands
   and the country repo carries redirect notes in its README.
-- **Minor** — new optional fields, a new placeholder in the path vocabulary, new `status`
-  or commit types, new normative text that no existing conforming repo violates.
+- **Minor** — new optional fields, a new derived placeholder, new `status` or commit
+  types, new normative text that no existing conforming repo violates. A repo using a
+  frontmatter field the spec never named is not a spec change at all — that is what the
+  open half of the vocabulary is for.
 - **Patch** — wording.
 
 v1.0 is reached when at least one repo conforms to this document end to end: manifest
@@ -482,8 +508,10 @@ holding. Until then the `early-stage` notice in each country repo is the honest 
   `.legalize.yml` and `spec_version`, so a consumer discovers a repo's structure instead
   of assuming one. Makes the identifier unique per directory, names who supplies the
   discriminant, and forbids one act overwriting another. Replaces free-form directory
-  structure with a path template drawn from a closed vocabulary, declarable per group of
-  directories, and recommends sharding. Defines what a file's directory is. States that
+  structure with a path template, declarable per group of directories, whose placeholders
+  are either values this spec derives or keys of the law's own frontmatter — so a country
+  can choose a shape without a spec change, and a consumer resolves it without
+  country-specific code. Recommends sharding. Defines what a file's directory is. States that
   `Source-Date` is the authority, that future dates are valid, and that freshness must
   ignore them. Corrects four claims v0.3 made that the corpora do not bear out:
   `last_amendment` is required only where an amendment exists, both git identities are the
