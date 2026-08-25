@@ -124,13 +124,24 @@ ones, which is the whole argument. See [Dates](#dates).
 
 The `identifier` is both a law's public name and its file name. A second act resolving to
 the same string does not merely collide in an index: it replaces the first law's file,
-and the first law leaves the corpus with nothing in git to show it was ever there. One
-country published 6,862 such pairs before this section existed, and in about 8 % of them
-the surviving file held the wrong act under the right name.
+and the first law leaves the corpus with nothing in git to show it was ever there. In a
+partitioned repository it need not even replace a file to do damage — two laws under one
+name in different directories are two rows fighting for one key in every consumer that
+stores them together. One country published 6,862 such pairs before this section
+existed, and in about 8 % of them the surviving file held the wrong act under the
+right name.
 
-1. **`(directory, identifier)` is the key.** An identifier MUST be unique within the
-   directory that holds it. Where a country partitions by jurisdiction, the pair is what
-   must be unique, and it is what a consumer stores and looks up.
+1. **The identifier is the key, and it is unique across the repository.** Not within the
+   directory that holds it: a consumer stores laws by identifier, and the ones that do
+   this store them for a whole repository at once — the reference implementation's table
+   has the identifier as a global primary key over 763,144 rows. A rule that only promises
+   uniqueness per directory promises less than every consumer needs, and the gap is
+   invisible until two jurisdictions of one country each publish a law under the same
+   name and the second overwrites the first in the consumer rather than in the repository.
+
+   Repository-wide is also what publishers already do. Making the rule match costs a
+   conforming repo nothing: measured across the three jurisdictions of the largest
+   partitioned repo, 171,737 laws, zero identifiers appear twice.
 
 2. **The country's rule supplies the discriminant.** Where a source reuses one number for
    unrelated acts, whatever the source uses to tell them apart MUST be part of the
@@ -506,9 +517,10 @@ holding. Until then the `early-stage` notice in each country repo is the honest 
 
 - **v0.4** — What v0.3 left unsaid, and what it said that the corpora do not bear out. Adds
   `.legalize.yml` and `spec_version`, so a consumer discovers a repo's structure instead
-  of assuming one. Makes the identifier unique per directory, names who supplies the
-  discriminant, and forbids one act overwriting another. Replaces free-form directory
-  structure with a path template, declarable per group of directories, whose placeholders
+  of assuming one. Makes the identifier unique across the repository — what consumers
+  that store laws by identifier already need, and what publishers already produce — names
+  who supplies the discriminant, and forbids one act overwriting another. Replaces
+  free-form directory structure with a path template, declarable per group of directories, whose placeholders
   are either values this spec derives or keys of the law's own frontmatter — so a country
   can choose a shape without a spec change, and a consumer resolves it without
   country-specific code. Recommends sharding. Defines what a file's directory is. States that
