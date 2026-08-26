@@ -68,6 +68,18 @@ git log --oneline -- es/BOE-A-1978-31229.md
 git diff 6660bcf^..6660bcf -- es/BOE-A-1978-31229.md
 ```
 
+## Ask an assistant
+
+Claude, ChatGPT, Cursor and anything else that speaks MCP can read this corpus directly: add
+`https://legalize.dev/mcp` as a connector. Read-only tools, free tier, sign-in required.
+
+The one worth having is `law_at_date` — what a norm said on a given day, with the commit SHA
+behind the answer, so the quote is checkable against these repos rather than taken on trust.
+There are also diffs between two dates and the amendment history of any law.
+
+Details and setup for each client: **[legalize-dev/mcp](https://github.com/legalize-dev/mcp)**
+· listed in the official MCP Registry as `dev.legalize/legalize`.
+
 ## Repos
 
 | Repo | What |
@@ -75,6 +87,7 @@ git diff 6660bcf^..6660bcf -- es/BOE-A-1978-31229.md
 | **[legalize](https://github.com/legalize-dev/legalize)** | This repo. Index, docs, overview. |
 | **[legalize-pipeline](https://github.com/legalize-dev/legalize-pipeline)** | The engine. Fetches, parses, and commits legislation for 30+ countries. |
 | **[legalize-sdks](https://github.com/legalize-dev/legalize-sdks)** | Official client libraries for the Legalize API — Python, Node/TypeScript, Go, curl. |
+| **[mcp](https://github.com/legalize-dev/mcp)** | The official MCP connector — endpoint, tools, and how to wire it into an AI client. |
 | **[legalize-pt](https://github.com/legalize-dev/legalize-pt)** | Portuguese laws (109,411 norms). |
 | **[legalize-it](https://github.com/legalize-dev/legalize-it)** | Italian laws (86,518 norms). |
 | **[legalize-co](https://github.com/legalize-dev/legalize-co)** | Colombian laws (71,900 norms). |
