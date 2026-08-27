@@ -1,0 +1,28 @@
+name: check-spec
+
+# Self-test for check_spec.py: parses the 3 example manifests embedded in
+# SPEC.md and checks resolve() against their worked examples. Catches a spec
+# edit and a worked example drifting apart — e.g. a placeholder the prose
+# calls valid that the resolver rejects, or a test vector that no longer
+# matches its own table.
+#
+# This does not clone a country repo and check it against real data (that
+# needs `python3 check_spec.py <repo_dir>`, run locally against a checkout —
+# see README.md). Doing that here would mean a full clone of a repo like
+# legalize-pt on every push, for a script that only needs a handful of files.
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python3 check_spec.py

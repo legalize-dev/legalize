@@ -229,9 +229,13 @@ is what `{directory}` — the `jurisdiction` field under another name — alread
 The two shapes in use today:
 
 ```
-{directory}/{identifier}.md                fr/LEGITEXT000006069414.md
-{directory}/{id_sha1_2}/{identifier}.md    es/bb/BOE-A-1978-31229.md
+{directory}/{identifier}.md              fr/LEGITEXT000006069414.md         every repo but pt
+{directory}/{year}/{identifier}.md       pt/1998/DRE-1998-315-239980.md     pt (year is a frontmatter field, not derived)
 ```
+
+`{id_sha1_2}` is defined below and MUST be supported by every implementation, but no
+repo shards by it yet — it is the spec's recommended default for a country whose
+identifier carries no field as legible as Portugal's `year`.
 
 Test vectors, which every implementation MUST reproduce:
 
