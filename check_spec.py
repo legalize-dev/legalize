@@ -3,24 +3,38 @@
 Two modes:
 
   python3 check_spec.py
-      Self-test: parses the 3 example manifests embedded in SPEC.md and checks
-      resolve() against their worked examples. No repo needed. This is what CI runs.
+      Self-test: parses the 3 example manifests embedded in SPEC.md, checks
+      resolve() against their worked examples, then runs check_repo() over a
+      throwaway repo built in a temp dir. No country checkout needed. This is
+      what CI runs.
 
   python3 check_spec.py <repo_dir> [<repo_dir> ...]
-      Runs the self-test, then validates each given country repo's real
-      `.legalize.yml` against a sample of its actual files: resolve() is fed
-      each sampled file's own frontmatter and must reproduce that file's real
-      path. This is the check that catches a manifest describing a shape the
-      repo isn't actually in.
+      Runs the self-test, then validates each given country repo against a
+      sample of its actual files: resolve() is fed each sampled file's own
+      frontmatter and must reproduce that file's real path. This is the check
+      that catches a manifest describing a shape the repo isn't actually in.
+      A repo with no `.legalize.yml` predates the manifest and is checked
+      against the pre-spec default layout — SPEC.md, §Conformance.
 """
+import contextlib
 import hashlib
+import io
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parent
+
+
+def _spec_manifests() -> list:
+    """The example manifests embedded in SPEC.md, in document order: the flat
+    one, pt's two-entry one, and the pre-spec fallback — which carries no
+    `spec_version` because a repo predating the manifest declares nothing."""
+    blocks = re.findall(r"```yaml\n(.*?)```", (ROOT / "SPEC.md").read_text(), re.S)
+    return [yaml.safe_load(b) for b in blocks if "layout:" in b]
 
 
 def resolve(manifest, directory, identifier, frontmatter=None):
@@ -62,13 +76,21 @@ def _read_frontmatter(path: Path) -> dict:
 
 
 def check_repo(repo_dir: str, sample_per_directory: int = 5) -> bool:
-    """Validate a real repo's .legalize.yml against a sample of its own files."""
+    """Validate a real repo against a sample of its own files, using its
+    .legalize.yml or — when it has none — the pre-spec default layout."""
     root = Path(repo_dir)
     manifest_path = root / ".legalize.yml"
-    if not manifest_path.exists():
-        print(f"FAIL {repo_dir}: no .legalize.yml at repo root")
-        return False
-    manifest = yaml.safe_load(manifest_path.read_text())
+    if manifest_path.exists():
+        manifest = yaml.safe_load(manifest_path.read_text())
+        against = ".legalize.yml"
+    else:
+        # SPEC.md, §Conformance: a repo with no manifest predates it, and a
+        # consumer MUST read it with the flat default layout. Failing here
+        # declared 31 of the 32 country repos broken when only `pt` had shipped
+        # a manifest — that was the verifier being wrong, not the repos. A repo
+        # that is not actually flat still fails below, on its own files.
+        manifest = _spec_manifests()[2]
+        against = "the pre-spec default layout (no .legalize.yml)"
 
     directories = sorted(
         p.name for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")
@@ -94,20 +116,23 @@ def check_repo(repo_dir: str, sample_per_directory: int = 5) -> bool:
             checked += 1
             if expected != actual:
                 print(
-                    f"FAIL {repo_dir}: {actual} resolves to {expected!r} via its own "
-                    f"manifest — they should be the same path"
+                    f"FAIL {repo_dir}: {actual} resolves to {expected!r} via "
+                    f"{against} — they should be the same path"
                 )
                 ok = False
+    if checked == 0:
+        # Without a manifest to miss, an empty directory would otherwise pass
+        # green: a clone with no working tree, or a path that is not a repo.
+        print(f"FAIL {repo_dir}: no law files sampled — is this a repo checkout?")
+        ok = False
     status = "PASS" if ok else "FAIL"
-    print(f"{status} {repo_dir}: {checked} files sampled against .legalize.yml")
+    print(f"{status} {repo_dir}: {checked} files sampled against {against}")
     return ok
 
 
 def self_test() -> None:
     spec = (ROOT / "SPEC.md").read_text()
-    blocks = re.findall(r"```yaml\n(.*?)```", spec, re.S)
-    mans = [yaml.safe_load(b) for b in blocks if "layout:" in b]
-    fr, pt, fallback = mans[0], mans[1], mans[2]
+    fr, pt, fallback = _spec_manifests()
 
     assert resolve(fr, "fr", "LEGITEXT000006069414") == "fr/LEGITEXT000006069414.md"
     assert resolve(pt, "pt", "DRE-DEC-13-1975") == "pt/b3/DRE-DEC-13-1975.md"
@@ -147,7 +172,22 @@ def self_test() -> None:
         assert hashlib.sha1(ident.encode()).hexdigest()[:2] == bucket, ident
         assert f"| `{ident}`" in spec and f"`{bucket}`" in spec
 
-    print("ok — 3 manifests parsed from SPEC.md, 12 assertions passed")
+    # check_repo's two modes, on a repo built here. A repo with no manifest is
+    # read with the pre-spec default layout instead of being called broken, and
+    # one whose files are not laid out that way still fails on its own files.
+    log = io.StringIO()
+    with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(log):
+        law = '---\nidentifier: "{}"\ncountry: "uy"\n---\ntext\n'
+        assert check_repo(tmp) is False, log.getvalue()  # an empty dir is no repo
+        (Path(tmp) / "uy").mkdir()
+        (Path(tmp) / "uy/UY-ley-1.md").write_text(law.format("UY-ley-1"), encoding="utf-8")
+        assert check_repo(tmp) is True, log.getvalue()
+        (Path(tmp) / "uy/1998").mkdir()
+        (Path(tmp) / "uy/1998/UY-ley-2.md").write_text(law.format("UY-ley-2"), encoding="utf-8")
+        assert check_repo(tmp) is False, log.getvalue()
+    assert "pre-spec default layout" in log.getvalue(), log.getvalue()
+
+    print("ok — 3 manifests parsed from SPEC.md, 16 assertions passed")
 
 
 if __name__ == "__main__":
