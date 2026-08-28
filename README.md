@@ -133,7 +133,7 @@ Legalize is open legal infrastructure:
 
 ## Contributing
 
-The main contribution is adding a new country. Read the [format spec](SPEC.md) for the minimal contract, then follow the [step-by-step guide](https://github.com/legalize-dev/legalize-pipeline/tree/main/adding-a-country). `check_spec.py` in this repo is a small, dependency-light (just PyYAML) reference implementation of §Directory layout's `resolve()` rule — run `python3 check_spec.py <path-to-a-country-repo>` to check a real checkout's `.legalize.yml` against a sample of its own files.
+The main contribution is adding a new country. Read the [format spec](SPEC.md) for the minimal contract, then follow the [step-by-step guide](https://github.com/legalize-dev/legalize-pipeline/tree/main/adding-a-country). `check_spec.py` in this repo is a small, dependency-light (just PyYAML) conformance checker, and the reference implementation of §Directory layout's `resolve()` rule. `python3 check_spec.py <path-to-a-country-repo>` reads the spec version that repo declares, checks every law file and every commit against the clauses that version defines, and exits non-zero on a violation — seconds on a corpus of a few hundred thousand commits, with no network and no clone. `python3 check_spec.py --list` prints the rules it implements, the section of the spec each one comes from, and the shell command to ask the same question by hand.
 
 You can use the shared [legalize-pipeline](https://github.com/legalize-dev/legalize-pipeline) or build your own pipeline — as long as the output follows the spec. South Korea was built with an independent pipeline and it works great.
 
