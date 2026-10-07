@@ -108,6 +108,11 @@ Six of them — `title`, `identifier`, `country`, `rank`, `status` and `source` 
 always present, and so is `jurisdiction` where the country has one. **The two date fields
 are required whenever the source states the date, and omitted when it does not.**
 
+`country` follows ISO 3166-1 alpha-2 with two exceptions: `uk` (the ISO code for the
+United Kingdom is `gb`) and `eu`, which is reserved by ISO but not assigned to a country.
+We are aware of the `uk` mismatch and may change it to `gb` in the future; until then
+`uk` is the value in every published file.
+
 Additional fields are welcome. Korea adds law sub-types, the UK adds `type_code` and `document_main_type`, France may add code structure metadata. These are country-specific extensions.
 
 **A date field carries a date the source states.** A placeholder standing in for an
