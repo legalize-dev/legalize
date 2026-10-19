@@ -51,6 +51,7 @@ import argparse
 import contextlib
 import hashlib
 import io
+import json
 import re
 import subprocess
 import sys
@@ -304,6 +305,7 @@ class Repo:
                         _read_head(path)[0],
                     )
                 )
+        self.sampled = bool(sample)
         self._commits: list[dict] | None = None
 
     def head(self, relpath: str) -> tuple[dict, list[str]]:
@@ -649,6 +651,61 @@ def git_identity(spec, repo):
         yield f"{who!r} authored or committed (e.g. {sha}); §Git identity requires {spec['identity']!r}"
 
 
+# Per-law gap fields and the keys every entry carries (§Coverage).
+_GAP_FIELDS = {
+    "source_version_gaps": ("date", "reason", "sha256"),
+    "undated_amendments": ("source_id", "reason"),
+}
+_COVERAGE_KEYS = ("spec_version", "as_of", "source_index", "discovered", "published", "excluded")
+
+
+def coverage_reported(spec, repo):
+    path = repo.root / "coverage.json"
+    if not path.exists():
+        yield "no coverage.json at the repo root — §Coverage requires one"
+        return
+    try:
+        coverage = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        yield f"coverage.json is not JSON: {exc}"
+        return
+    for key in _COVERAGE_KEYS:
+        if key not in coverage:
+            yield f"coverage.json has no {key!r}"
+    for entry in coverage.get("excluded") or []:
+        if not (isinstance(entry, dict) and entry.get("identifier") and entry.get("reason")):
+            yield f"coverage.json excluded entry {entry!r} needs an identifier and a reason"
+    counts = {"version_gaps": 0, "laws_with_version_gaps": 0}
+    counts |= {"undated_amendments": 0, "laws_with_undated_amendments": 0}
+    for relpath, _, front in repo.laws:
+        for field, keys in _GAP_FIELDS.items():
+            raw = front.get(field)
+            if raw is None:
+                continue
+            try:
+                items = json.loads(raw) if isinstance(raw, str) else raw
+            except ValueError:
+                yield f"{relpath} — {field} is not a JSON array"
+                continue
+            if not isinstance(items, list) or not items:
+                yield f"{relpath} — {field} must be a non-empty JSON array or be omitted"
+                continue
+            for item in items:
+                missing = [k for k in keys if not (isinstance(item, dict) and item.get(k))]
+                if missing:
+                    yield f"{relpath} — a {field} entry lacks {', '.join(missing)}"
+            total = "version_gaps" if field == "source_version_gaps" else field
+            counts[total] += len(items)
+            counts[f"laws_with_{total}"] += 1
+    if repo.sampled:
+        return  # counts are only comparable over the whole repo
+    if coverage.get("published") != len(repo.laws):
+        yield f"coverage.json says {coverage.get('published')} published; the repo has {len(repo.laws)}"
+    for key, measured in counts.items():
+        if coverage.get(key, 0) != measured:
+            yield f"coverage.json says {key} {coverage.get(key, 0)}; the files say {measured}"
+
+
 def amends_resolves(spec, repo):
     """§Amending acts: `amends` is a list of identifiers as this repo names them."""
     known = {str(f.get("identifier")) for _, _, f in repo.laws if f.get("identifier")}
@@ -752,6 +809,17 @@ RULES: list[dict] = [
         "trailers; a commit with no [type] carries no Source-Date either.",
         "probe": "git -C {repo} log --format=%s | grep -o '^\\[[a-z-]*\\]' | sort | uniq -c",
         "fn": commit_format,
+    },
+    {
+        "id": "coverage_reported",
+        "section": "Coverage",
+        "since": "0.5",
+        "needs": "files",
+        "checks": "coverage.json exists with its keys and a reason for every exclusion, each "
+        "law's source_version_gaps and undated_amendments are JSON arrays with their keys, "
+        "and the counts match the files.",
+        "probe": "cat {repo}/coverage.json",
+        "fn": coverage_reported,
     },
     {
         "id": "dates_mirror_source_date",
@@ -967,7 +1035,30 @@ def self_test() -> None:
         )
         (root / "uy").mkdir()
         (root / "uy/UY-ley-1.md").write_text(law.format("UY-ley-1"), encoding="utf-8")
+        coverage = {
+            "spec_version": spec["version"],
+            "as_of": "2020-01-02",
+            "source_index": "test index",
+            "discovered": 1,
+            "published": 1,
+            "excluded": [],
+        }
+        (root / "coverage.json").write_text(json.dumps(coverage), encoding="utf-8")
         assert check_repo(tmp, spec, "test", files_only=True) is True, log.getvalue()
+
+        # §Coverage: a recorded gap must say what it is, and the counts must match it
+        gapped = law.format("UY-ley-1").replace(
+            "---\ntext", 'source_version_gaps: "[{\\"date\\": \\"2021-01-01\\"}]"\n---\ntext'
+        )
+        (root / "uy/UY-ley-1.md").write_text(gapped, encoding="utf-8")
+        assert check_repo(tmp, spec, "test", files_only=True) is False, log.getvalue()
+        assert "lacks reason, sha256" in log.getvalue(), log.getvalue()
+        assert "version_gaps 0; the files say 1" in log.getvalue(), log.getvalue()
+        (root / "uy/UY-ley-1.md").write_text(law.format("UY-ley-1"), encoding="utf-8")
+        (root / "coverage.json").unlink()
+        assert check_repo(tmp, spec, "test", files_only=True) is False, log.getvalue()
+        assert "no coverage.json" in log.getvalue(), log.getvalue()
+        (root / "coverage.json").write_text(json.dumps(coverage), encoding="utf-8")
 
         # a law that is not where the flat default puts it
         (root / "uy/1998").mkdir()

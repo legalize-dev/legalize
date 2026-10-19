@@ -1,4 +1,4 @@
-# Legalize Format Spec v0.4
+# Legalize Format Spec v0.5
 
 Minimal contract for all country repos. Each country's legal system is different — this spec defines what MUST be consistent, and what each country decides for itself.
 
@@ -9,7 +9,7 @@ Key words `MUST`, `MUST NOT`, `SHOULD` and `MAY` are used as in RFC 2119.
 A conforming repo declares itself in `.legalize.yml` at the repo root:
 
 ```yaml
-spec_version: "0.4"
+spec_version: "0.5"
 country: "fr"
 layout:
   - directories: ["*"]
@@ -28,7 +28,7 @@ A repo whose directories do not all have the same shape names the ones that diff
 leaves the rest to `*`:
 
 ```yaml
-spec_version: "0.4"
+spec_version: "0.5"
 country: "pt"
 layout:
   - directories: ["pt"]
@@ -353,8 +353,9 @@ Rules:
   never change.
 - `text_state` is a core field, not a country extension. It must reach every consumer of
   the data, including the free tier of any API built on these repos.
-- `last_amendment` is the official identifier of the most recent amending act. It is
-  required on an `as_enacted` file **that has been amended**, and omitted on one that has
+- `last_amendment` is the official identifier of the most recent amending act whose date
+  is known; an amendment listed in `undated_amendments` (see [Coverage](#coverage)) is not
+  it. It is required on an `as_enacted` file **that has been amended**, and omitted on one that has
   not — an act nobody has touched has no most recent amendment, and that is the ordinary
   case, not the corner: 70 % of a real 171,734-file `as_enacted` corpus is in it. Where a
   publisher omits the field, `last_updated` equals `publication_date`, and the two
@@ -425,8 +426,9 @@ Types: `[bootstrap]`, `[reform]`, `[new]`, `[repeal]`, `[correction]`, `[fix-pip
 ### History
 
 **A repo's git history is the corpus's version history.** Each law's file carries one
-commit per version its source publishes, and a repo whose history is a single import does
-not conform. Such a repo has the text of every law and no record of when it said what,
+commit per version its source publishes — except a version listed in its
+`source_version_gaps` (see [Coverage](#coverage)) — and a repo whose history is a single
+import does not conform. Such a repo has the text of every law and no record of when it said what,
 which is the one thing it offers over a folder of files.
 
 This is not a shortcut that can be taken back later. Two corpora here were published
@@ -442,6 +444,59 @@ oldest first. The repository-level sequence carries no meaning at all: a publish
 laws in whatever order is convenient — parallelised, batched, alphabetical — so two laws'
 commits interleave freely. A consumer MUST NOT read repo-wide commit order as
 chronological. `Source-Date` dates a change; position does not.
+
+### Coverage
+
+**A repo says how much of its source it holds, and what it left out.** A gap that is
+written down is a known limit of the corpus; a gap that is not is a wrong answer nobody
+can see. This section forbids silent omission, not omission.
+
+A publisher MUST first try to read every version faithfully, and MUST NOT publish text it
+cannot place — a gap is the alternative to misplaced or invented text, never to effort. A
+fetch that times out, a rate limit or a network error is a failed run to retry, not a
+gap.
+
+| Field                 | On             | Value |
+| :-------------------- | :------------- | :---- |
+| `source_version_gaps` | a law          | The versions its source publishes that the file's history omits. |
+| `undated_amendments`  | a law          | The amending acts its source cites whose effect the publisher cannot date. |
+| `coverage.json`       | the repo root  | What the repo holds, measured against the source's index. |
+
+- **`source_version_gaps`** is a JSON array, written as a string, of objects with `date`
+  (the version's date as the source catalogues it, ISO 8601), `reason`, and `sha256` (of
+  the source bytes that could not be read). `norm_id` and `url` MAY be added. The law's
+  other versions are published as usual.
+- **`undated_amendments`** is a JSON array, written as a string, of objects with
+  `source_id` and `reason`. `provision` and `basis_source` MAY be added. See
+  [Dates](#dates).
+- **`coverage.json`** is written with every publication:
+
+  ```json
+  {
+    "spec_version": "0.5",
+    "as_of": "2026-10-19",
+    "source_index": "Irish Statute Book, Acts by year",
+    "discovered": 4115,
+    "published": 9012,
+    "excluded": [{ "identifier": "IE-1937-act-38", "reason": "…" }],
+    "laws_with_version_gaps": 3,
+    "version_gaps": 4,
+    "laws_with_undated_amendments": 9,
+    "undated_amendments": 12
+  }
+  ```
+
+  `discovered` counts the laws the source's index lists, and `published` the law files
+  in the repo — more when a repo also publishes the acts its laws cite. Every law the repo
+  set out to publish and did not, discovered or cited, appears in `excluded` with its
+  reason. The counts are measured from the repo and the index at publication, never copied
+  from prose. Like the manifest, the file is repo metadata, not a legislative record: it
+  carries no `Source-Date` trailer, so history sync ignores it.
+
+A consumer MUST NOT present a repo as complete when its `coverage.json` lists an exclusion
+or a gap, and SHOULD show a law's own gaps where it shows that law. A publisher SHOULD
+report a run as failed when it records a kind of gap it had not recorded before, after
+publishing everything publishable, so every new kind is reviewed rather than accumulated.
 
 ### Dates
 
@@ -461,6 +516,12 @@ authoritative.**
   date, the trailer is omitted rather than filled with a floor value, and the commit's
   author date is the norm's `publication_date`. An undated change is not a dated reform,
   and a consumer keyed on `Source-Date` is right to skip it.
+- **An amending act whose effect cannot be dated is not a commit.** When the source cites
+  an act it cannot date — the act is unreadable, states no date, or is dated before the
+  law it is said to amend — the law lists it in `undated_amendments` (see
+  [Coverage](#coverage)) instead. A commit placed at a guessed date would break the order
+  §History requires; the text it changed still reaches the file through the next dated
+  version.
 - **`Source-Date` MAY be in the future**, and such commits are valid: a norm entering
   into force years from now is published today carrying that date. Bootstrap writes norms
   in their own chronological order, so a freshly built repo opens with a run of
@@ -524,6 +585,13 @@ holding. Until then the `early-stage` notice in each country repo is the honest 
 
 ### Changelog
 
+- **v0.5** — Adds §Coverage. A version the publisher cannot read faithfully may be
+  omitted, but only as a recorded gap (`source_version_gaps`); an amending act whose
+  effect cannot be dated is listed (`undated_amendments`) rather than committed at a
+  guessed date; and `coverage.json` measures what the repo holds against the source's
+  index. §History excepts the versions a law lists as gaps, §Dates says an undatable
+  amendment is not a commit, and `last_amendment` names the most recent *dated* one. Every
+  v0.4 repo still conforms; the fields adopt the shape `legalize-eu` already publishes.
 - **v0.4** — What v0.3 left unsaid, and what it said that the corpora do not bear out. Adds
   `.legalize.yml` and `spec_version`, so a consumer discovers a repo's structure instead
   of assuming one. Makes the identifier unique across the repository — what consumers

@@ -14,7 +14,8 @@
 # A consumer MUST refuse a repo whose spec_version is newer than the version it
 # implements. Reading a newer manifest with older rules yields paths that are
 # wrong rather than absent, and a 404 for a law that exists is the hardest
-# failure to notice.
+# failure to notice. A repo declaring "0.5" also writes coverage.json at its root —
+# what it holds and what it left out, measured against the source (SPEC.md, §Coverage).
 spec_version: "0.4"
 
 # ─── ISO 3166-1 alpha-2, and it matches the `country` in every file ─────────────
