@@ -147,7 +147,8 @@ Legalize is open source and free. If you want to help fund hosting and developme
 
 ## License
 
-Legislative content: public domain (sourced from official government publications).
+Legislative texts come from the linked official sources; reuse terms vary by
+source and jurisdiction, and Legalize claims no ownership of those texts.
 Repository structure, metadata, and tooling: [MIT](LICENSE).
 
 ---
