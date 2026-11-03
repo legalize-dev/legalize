@@ -44,6 +44,7 @@ Legalize turns official legislation into version-controlled, machine-readable da
 | 🇫🇷 France | [legalize-fr](https://github.com/legalize-dev/legalize-fr) | 83 codes | [Légifrance](https://www.legifrance.gouv.fr/) | ✅ Live |
 | 🇰🇷 South Korea | [legalize-kr](https://github.com/9bow/legalize-kr) | 5,575 | [law.go.kr](https://open.law.go.kr) | ✅ Community |
 | 🇺🇦 Ukraine | [legalize-ua](https://github.com/legalize-dev/legalize-ua) | — | [Rada](https://zakon.rada.gov.ua/) | 🚧 Pipeline ready |
+| 🇲🇰 North Macedonia | [legalize-mk](https://github.com/legalize-dev/legalize-mk) | — | [LDBIS](https://ldbis.pravda.gov.mk/Prebaruvanje.aspx) | ✅ Live |
 | 🇧🇷 Brazil | — | — | [LeXML](https://www.lexml.gov.br/) | 🔜 Help wanted |
 
 **Want to add your country?** See the [step-by-step guide](https://github.com/legalize-dev/legalize-pipeline/tree/main/adding-a-country).
@@ -115,6 +116,7 @@ Details and setup for each client: **[legalize-dev/mcp](https://github.com/legal
 | **[legalize-uk](https://github.com/legalize-dev/legalize-uk)** | UK legislation (3,970 acts). |
 | **[legalize-ad](https://github.com/legalize-dev/legalize-ad)** | Andorran laws (3,545 norms). |
 | **[legalize-li](https://github.com/legalize-dev/legalize-li)** | Liechtenstein laws (3,504 norms). |
+| **[legalize-mk](https://github.com/legalize-dev/legalize-mk)** | Macedonian legislation from LDBIS. |
 | **[legalize-ee](https://github.com/legalize-dev/legalize-ee)** | Estonian laws (1,597 norms). |
 | **[legalize-no](https://github.com/legalize-dev/legalize-no)** | Norwegian laws (779 norms). |
 | **[legalize-sk](https://github.com/legalize-dev/legalize-sk)** | Slovak laws (300 norms). |
